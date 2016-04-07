@@ -15,13 +15,32 @@
         
         /*function addCourse is used to the course using the racoon api*/
         public function addCourse($url='',$method='', $headers=array(), $cookies='', $params='') {
+
+            $userPoPo = new UserPoPo();
+            $userPoPo->setId(1);
+            $userPoPo->setName("Shivam");
+
+            $userListPoPo = new UserListPoPo();
+
+
             $this->setReqUrl($url);
             $this->setReqMethod($method);
             $this->setReqHeaders($headers);
             $this->setReqCookies($cookies);
             $this->setReqParams($params);
-            $result = $this->call();
-            return $result;
+            $this->setReqPoPo($userPoPo);
+            $this->setResSuccessPoPo($userListPoPo);
+            $this->setReqPoPo($userPoPo);
+
+            $this->call();
+
+            //GET Result of API Call
+            $responseHeaders = $this->getResHeaders();
+
+
+
+
+            //return $result;
         }
         
         /*function updateCourse is used to update the course using the raconn api*/

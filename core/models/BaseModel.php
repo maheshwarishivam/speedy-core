@@ -1,8 +1,65 @@
 <?php 
 
-abstract Class BaseModel{
+abstract Class BaseModel {
     private $req;
     private $res;
+
+    private $reqPoPo;
+    private $resSuccessPoPo;
+    private $resErrorPoPo;
+
+    /**
+     * @return mixed
+     */
+    public function getReqPoPo()
+    {
+        return $this->reqPoPo;
+    }
+
+    /**
+     * @param mixed $reqPoPo
+     */
+    public function setReqPoPo($reqPoPo)
+    {
+        $this->reqPoPo = $reqPoPo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResSuccessPoPo()
+    {
+        return $this->resSuccessPoPo;
+    }
+
+    /**
+     * @param mixed $resSuccessPoPo
+     */
+    public function setResSuccessPoPo($resSuccessPoPo)
+    {
+        $this->resSuccessPoPo = $resSuccessPoPo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResErrorPoPo()
+    {
+        return $this->resErrorPoPo;
+    }
+
+    /**
+     * @param mixed $resErrorPoPo
+     */
+    public function setResErrorPoPo($resErrorPoPo)
+    {
+        $this->resErrorPoPo = $resErrorPoPo;
+    }
+
+    public function getReqPoPoJSON() {
+        return $this->reqPoPo->toJSON();
+    }
+
     
     public function BaseModel() {
         $this->req = new SpeedyHttpRequest(); 
@@ -19,7 +76,7 @@ abstract Class BaseModel{
         break;
 
         case 'POST': 
-            return $this->pushCall();
+            $this->postCall();
         break;
 
         case 'PUT': 
@@ -77,11 +134,13 @@ abstract Class BaseModel{
         //echo "<pre>";echo "status code == ".$status;echo "<br><br>cookies ==";print_r($cookies);echo "<br><br>headers ==";echo $headers ;echo "<br><br>contents==";print_r(json_decode($content, true));
     }
 
-    private final function pushCall(){
+    private final function postCall(){
         $headers = $this->req->getHeaders();
         $url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
-        $params  = $this->req->getParams();
+
+        $body = $this->getReqPoPoJSON();
+
         $headers[] = 'Cookie: ' . $cookies;
 
         $ch = curl_init();
@@ -92,7 +151,8 @@ abstract Class BaseModel{
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POST, 1 );
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $params); 
+        //TODO: Add body to CURL Request
+        //curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 10000);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
         $http_result = curl_exec($ch);
@@ -102,6 +162,7 @@ abstract Class BaseModel{
         curl_close($ch);
         
         if ($http_result === false) {
+            //TODO: Handle errors
             $http_result = '{"error" : "1", "msg": "' . $err_num."--".$err_msg . '"}';
         }else {
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $http_result, $matches);
@@ -117,10 +178,9 @@ abstract Class BaseModel{
         
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
-        $this->res->setBody($content);
+        $this->res->setBody($this->resSuccessPoPo->fromJSON());
         $this->res->setStatus($status);
-        
-        return $content;
+
     }
 
     private final function putCall(){
@@ -179,6 +239,10 @@ abstract Class BaseModel{
     
     public function setReqHeaders($headers){
         $this->req->setHeaders($headers);
+    }
+
+    public function getResHeaders(){
+        return $this->res->getHeaders();
     }
     
     public function setReqCookies($cookies){
