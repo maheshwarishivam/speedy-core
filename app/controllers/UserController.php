@@ -28,10 +28,9 @@
             $url      = 'http://private-38899-racoonelearning.apiary-mock.com/courses';
             $method   = 'POST';
             $result   = $user->addCourse($url, $method, $headers, $cookies, $params); 
-            $result   = json_decode($result, true);
+            //$result   = json_decode($result, true);
             echo $this->render('../app/views/CourseAdd.php', array('result'=>$result));
         }
-        
         
         /*Function courseUpdate is used to update the course*/
         public function courseUpdateAction() {
@@ -44,7 +43,7 @@
             $url      = 'http://private-38899-racoonelearning.apiary-mock.com/courses/course_id';
             $method   = 'PUT';
             $result   = $user->updateCourse($url, $method, $headers, $cookies, $params); 
-            $result   = json_decode($result, true);
+            //$result   = json_decode($result, true);
             echo $this->render('../app/views/CourseUpdate.php', array('result'=>$result));
         }
         
