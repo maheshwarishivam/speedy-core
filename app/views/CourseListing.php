@@ -1,32 +1,33 @@
 <h3>Course Listing</h3>
+<table border="1">
+	<tr>
+		<th>ID</th>
+		<th>name</th>
+		<th>code</th>
+		<th>version</th>
+		<th>image</th>
+		<th>modified_at</th>
+		<th>users</th>
+		<th>groups</th>
+		<th>Action</th>
+	</tr>
 <?php
-$courses = isset($result->data->courses)?$result->data->courses:'';
-if(!empty($courses)){
-	foreach($courses AS $c){
-		$courseId      = isset($c->id)?$c->id:'';
-		$courseName    = isset($c->name)?$c->name:'';
-		$courseCode    = isset($c->code)?$c->code:'';
-		$courseVersion = isset($c->version)?$c->version:'';
-		$thumbImage    = isset($c->images->thumbnail)?$c->images->thumbnail:'';
-		$largeImage    = isset($c->images->large)?$c->images->large:"";
-		$createdAt     = isset($c->created_at)?$c->created_at:'';
-		$modifiedAt    = isset($c->modified_at)?$c->modified_at:'';
-		$users         = isset($c->users)?$c->users:'';
-		$slides        = isset($c->slides)?$c->slides:'';
-		$groups        = isset($c->groups)?$c->groups:'';
-		
-		?>
-		<h5>Course Id : <?php echo $courseId?></h5>
-		<h5>Course Name : <?php echo $courseName?></h5>
-		<h5>Course Code : <?php echo $courseCode?></h5>
-		<h5>Course Version : <?php echo $courseVersion?></h5>
-		<h5>Course Image : <?php echo $largeImage?></h5>
-		<h5>Course Users : <?php echo $users?></h5>
-		<h5>Course slides : <?php echo $slides?></h5>
-		<h5>Course Groups : <?php echo $groups?></h5>
-		<?php            
-		echo '********************************************************';
+	$courses = isset($result->data->courses)?$result->data->courses:'';
+	//echo "<pre>"; print_r($courses); die;
+	foreach($courses as $row){
+	?>
+	<tr>
+		<td><?php echo $row->id;?></td>
+		<td><?php echo $row->name;?></td>
+		<td><?php echo $row->code;?></td>
+		<td><?php echo $row->version;?></td>
+		<td><img src="<?php echo $row->image->thumbnail;?>" /></td>
+		<td><?php echo $row->modified_at;?></td>
+		<td><?php echo $row->users;?></td>
+		<td><?php echo $row->groups;?></td>
+		<td><a href="<?php echo $this->app_url('index.php/user/courseUpdate/').$row->id;?>">Edit</a>&nbsp;&nbsp;&nbsp;<a href="<?php $this->app_url('gfhf');?>">Delete</a></td>
+	</tr>
+	<?php
 	}
-}
-    
 ?>
+</table>

@@ -1,7 +1,15 @@
 <?php 
-class Config{
-    const API_KEY         = '62f7b668181f54c08191cf62a2373ff7';
-    const AUTH_TOKEN      = '2861d3e4b6c7c7c97c3950c18f2b8255';
-    const CONFIG_VERSION  = '1.0';
-}
-?>
+
+const API_KEY         = '62f7b668181f54c08191cf62a2373ff7';
+const AUTH_TOKEN      = '15fac4dce19ad811ef48db6430c0ec458';
+const CONFIG_VERSION  = '1.0';
+
+
+// Load model in all project
+$autoload['models'][] = 'UserModel';
+
+
+
+
+
+

@@ -13,6 +13,7 @@ class BasePoPo {
 	}
 
 	public final function fromJSON($dataJson) {
+		//echo "<pre>"; print_r(json_decode($dataJson)); die;
 		return json_decode($dataJson);
 	}
 }
