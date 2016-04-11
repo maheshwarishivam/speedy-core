@@ -1,6 +1,11 @@
 <?php
 
-abstract class BaseController{
+abstract class AbstractBaseController {
+	abstract function render($file, $variables = array());
+	abstract function model($file);
+}
+
+class BaseController extends AbstractBaseController {
     
    /* This function is used as the default action if action is not provided by the user */
     public function indexAction(){
@@ -14,7 +19,7 @@ abstract class BaseController{
         ob_start();
         include $file;
         $renderedView = ob_get_clean();
-        return $renderedView;
+        echo $renderedView;
     }
     
     function model($file) {

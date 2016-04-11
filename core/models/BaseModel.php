@@ -1,9 +1,13 @@
 <?php 
 
-abstract Class BaseModel {
+abstract Class AbstractBaseModel {
+	abstract function call();
+}
+
+Class BaseModel extends AbstractBaseModel{
     private $req;
     private $res;
-    private $basePoPo;
+    private $basepopo;
 
     private $reqPoPo;
     private $resSuccessPoPo;
@@ -12,11 +16,8 @@ abstract Class BaseModel {
 	public function BaseModel() {
         $this->req = new SpeedyHttpRequest(); 
         $this->res = new SpeedyHttpResponse();
-		
-        $this->basePoPo = new BasePoPo(); ///----------------------------
-		
-    } 
-	
+        $this->basepopo = new BasePoPo();
+    }
 	
     /**
      * @return mixed
@@ -38,7 +39,7 @@ abstract Class BaseModel {
      */
     public function getResSuccessPoPo()
     {
-        return $this->resSuccessPoPo;
+        return $this->basepopo->fromJSON($this->resSuccessPoPo);
     }
 
     /**
@@ -65,10 +66,67 @@ abstract Class BaseModel {
         $this->resErrorPoPo = $resErrorPoPo;
     }
 
-    public function getReqPoPoJSON($body) {
-        return $this->basePoPo->toJSON($body);
+    public function getReqPoPoJSON() { 
+        return $this->reqPoPo->toJSON($this->reqPoPo);
+    }
+	
+	public function setReqUrl($url){
+        $this->req->setUrl($url);
+    }
+    
+    public function setReqHeaders($headers){
+        $this->req->setHeaders($headers);
     }
 
+    public function setReqCookies($cookies){
+        $this->req->setCookies($cookies);
+    }
+    
+    public function setReqMethod($method){
+        $this->req->setMethod($method);
+    }
+    
+    public function setReqParams($params){
+        $this->req->setParams($params);
+    }
+	
+	public function getResHeaders(){
+        return $this->res->getHeaders();
+    }
+	
+	public function getResCookies(){
+        return $this->res->getCookies();
+    }
+    
+    public function getResMethod(){
+        return $this->res->getMethod();
+    }
+    
+    public function getResParams(){
+        return $this->res->getBody();
+    }
+
+    /* public function getReqUrl(){
+        return $this->req->getUrl();
+    }
+    
+    public function getReqHeaders(){
+        return $this->req->getHeaders();
+    }
+    
+    public function getReqCookies(){
+        return $this->req->getCookies();
+    }
+    
+    public function getReqMethod(){
+        return $this->req->getMethod();
+    }
+    
+    public function getReqParams(){
+        return $this->req->getParams();
+    } */
+	
+	
     public final function call(){
         
         $method = $this->req->getMethod();
@@ -130,21 +188,23 @@ abstract Class BaseModel {
         
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
-        $this->res->setBody($this->basePoPo->fromJSON($content));
+        //$this->res->setBody($content);
+		$this->setResSuccessPoPo($content); 
+        $this->res->setBody($this->getResSuccessPoPo());
+        //$this->res->setBody($this->resSuccessPoPo->fromJSON($content));
         $this->res->setStatus($status);
-
-     
-        //echo "<pre>";echo "status code == ".$status;echo "<br><br>cookies ==";print_r($cookies);echo "<br><br>headers ==";echo $headers ;echo "<br><br>contents==";print_r(json_decode($content, true));
     }
 
     private final function postCall(){
         $headers = $this->req->getHeaders();
         $url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
-		$params  = $this->req->getParams();
+		//$params  = $this->req->getParams();
 		
-        $body = $this->getReqPoPoJSON($params);
-
+        $body = $this->getReqPoPoJSON();
+		
+		
+		
         $headers[] = 'Cookie: ' . $cookies;
 
         $ch = curl_init();
@@ -181,18 +241,20 @@ abstract Class BaseModel {
         
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
-        $this->res->setBody($this->basePoPo->fromJSON($content));
+//		$this->res->setBody($content);
+        $this->setResSuccessPoPo($content); 
+        $this->res->setBody($this->getResSuccessPoPo());
         $this->res->setStatus($status);
-
+		
     }
 
     private final function putCall(){
         $headers = $this->req->getHeaders();
         $url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
-        $params  = $this->req->getParams();
+        //$params  = $this->req->getParams();
 		
-		$body = $this->getReqPoPoJSON($params);
+		$body = $this->getReqPoPoJSON();
 		
         $headers[] = 'Cookie: ' . $cookies;
 
@@ -229,67 +291,58 @@ abstract Class BaseModel {
         
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
-        $this->res->setBody($this->basePoPo->fromJSON($content));
+        //$this->res->setBody($content);
+        //$this->res->setBody($this->resSuccessPoPo->fromJSON($content));
+		$this->setResSuccessPoPo($content); 
+        $this->res->setBody($this->getResSuccessPoPo());
         $this->res->setStatus($status);
         
     }
     private final function deleteCall(){
-
+		
+		$headers = $this->req->getHeaders();
+        $url     = $this->req->getUrl(); 
+        $cookies = $this->req->getCookies();
+        //$params  = $this->req->getParams();
+		
+		$body = $this->getReqPoPoJSON();
+		
+        $headers[] = 'Cookie: ' . $cookies;
+		
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 10000);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
+        $http_result = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err_msg = curl_error($ch);
+        $err_num = curl_errno($ch);
+        curl_close($ch);
+        
+        if ($http_result === false) {
+            $http_result = '{"error" : "1", "msg": "' . $err_num."--".$err_msg . '"}';
+        }else {
+            preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $http_result, $matches);
+            $cookies = array();
+            
+            foreach ($matches[1] as $item) {
+                parse_str($item, $cookie);
+                $cookies = array_merge($cookies, $cookie);
+            }
+        }
+        
+        list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
+        
+        $this->res->setHeaders($headers);
+        $this->res->setCookies($cookies);
+        //$this->res->setBody($content);
+        //$this->res->setBody($this->resSuccessPoPo->fromJSON($content));
+		$this->setResSuccessPoPo($content); 
+        $this->res->setBody($this->getResSuccessPoPo());
+        $this->res->setStatus($status);
+		
     } 
-
-    public function setReqUrl($url){
-        $this->req->setUrl($url);
-    }
-    
-    public function setReqHeaders($headers){
-        $this->req->setHeaders($headers);
-    }
-
-    public function setReqCookies($cookies){
-        $this->req->setCookies($cookies);
-    }
-    
-    public function setReqMethod($method){
-        $this->req->setMethod($method);
-    }
-    
-    public function setReqParams($params){
-        $this->req->setParams($params);
-    }
-	
-	public function getResHeaders(){
-        return $this->res->getHeaders();
-    }
-	
-	public function getResCookies(){
-        return $this->res->getCookies();
-    }
-    
-    public function getResMethod(){
-        return $this->res->getMethod();
-    }
-    
-    public function getResParams(){
-        return $this->res->getBody();
-    }
-    
-    /* public function getReqUrl(){
-        return $this->req->getUrl();
-    }
-    
-    public function getReqHeaders(){
-        return $this->req->getHeaders();
-    }
-    
-    public function getReqCookies(){
-        return $this->req->getCookies();
-    }
-    
-    public function getReqMethod(){
-        return $this->req->getMethod();
-    }
-    
-    public function getReqParams(){
-        return $this->req->getParams();
-    } */
 }

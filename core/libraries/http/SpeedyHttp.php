@@ -1,5 +1,5 @@
 <?php
-    abstract class SpeedyHttp{
+abstract class SpeedyHttp{
 
-    }
+}
 ?>
