@@ -67,7 +67,8 @@ Class BaseModel extends AbstractBaseModel{
     }
 
     public function getReqPoPoJSON() { 
-        return $this->reqPoPo->toJSON($this->reqPoPo);
+		$this->basepopo->setBasePopo($this->req->getParams());
+        return $this->basepopo->toJSON();
     }
 	
 	public function setReqUrl($url){
@@ -86,7 +87,7 @@ Class BaseModel extends AbstractBaseModel{
         $this->req->setMethod($method);
     }
     
-    public function setReqParams($params){
+    public function setReqParams($params){ 
         $this->req->setParams($params);
     }
 	
@@ -102,30 +103,13 @@ Class BaseModel extends AbstractBaseModel{
         return $this->res->getMethod();
     }
     
-    public function getResParams(){
+    public function getResParams(){ 
         return $this->res->getBody();
     }
-
-    /* public function getReqUrl(){
-        return $this->req->getUrl();
-    }
-    
-    public function getReqHeaders(){
-        return $this->req->getHeaders();
-    }
-    
-    public function getReqCookies(){
-        return $this->req->getCookies();
-    }
-    
-    public function getReqMethod(){
-        return $this->req->getMethod();
-    }
-    
-    public function getReqParams(){
-        return $this->req->getParams();
-    } */
 	
+    public function getResStatus(){
+        return $this->res->getStatus();
+    }
 	
     public final function call(){
         
@@ -148,7 +132,21 @@ Class BaseModel extends AbstractBaseModel{
 			$this->deleteCall();
 			break;
 
-        }
+        case 'UPLOADFILE': 
+			$this->uploadFileCall();
+			break;
+
+        } 
+		//die('d');
+		if( $this->getResStatus() == 401 ){ 
+			
+			if(count($_SESSION) > 0)
+				session_destroy();
+			
+			echo '<script> function fun(){ location.href="http://' . HTTP_HOST . '"; } fun();</script>';
+
+		} 
+		
     }
 
     private final function getCall(){ 
@@ -157,8 +155,6 @@ Class BaseModel extends AbstractBaseModel{
         $url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
 
-		//$headers = $this->login(); //----------------------- for lifetime login
-		
 		if(!empty( $cookies ) ){
 			$headers[] = 'Cookie: ' . $cookies;
 		}
@@ -167,20 +163,23 @@ Class BaseModel extends AbstractBaseModel{
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
+        curl_setopt($ch, CURLOPT_FAILONERROR, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 10000);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
         $http_result = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+       	$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err_msg = curl_error($ch);
         $err_num = curl_errno($ch);
         curl_close($ch);
-        
-        if ($http_result === false) {
-            $http_result = '{"error" : "1", "msg": "' . $err_num."--".$err_msg . '"}';
-        }else {
+       
+		if ($http_result === false ) {
+			
+            $content = '{"error" : "1", "messages": "' . $err_num."--".$err_msg . '"}';
+			
+        } else { 
+			
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $http_result, $matches);
             $cookies = array();
             
@@ -188,30 +187,24 @@ Class BaseModel extends AbstractBaseModel{
                 parse_str($item, $cookie);
                 $cookies = array_merge($cookies, $cookie);
             }
-        }
-        
-        list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
-        
-        $this->res->setHeaders($headers);
-        $this->res->setCookies($cookies);
-        //$this->res->setBody($content);
-		$this->setResSuccessPoPo($content); 
-        $this->res->setBody($this->getResSuccessPoPo());
-        //$this->res->setBody($this->resSuccessPoPo->fromJSON($content));
-        $this->res->setStatus($status);
+			
+			list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
 		
-		//echo "<pre>"; print_r(json_decode($content)); die;
+        }
+		
+		$this->res->setHeaders($headers);
+		$this->res->setCookies($cookies);
+		$this->setResSuccessPoPo($content); 
+		$this->res->setBody($this->getResSuccessPoPo());
+		$this->res->setStatus($status);
     }
 
     private final function postCall(){
         $headers = $this->req->getHeaders();
-        $url     = $this->req->getUrl(); 
+		$url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
-		//$params  = $this->req->getParams();
 		
         $body = $this->getReqPoPoJSON();
-		
-		//$headers = $this->login(); //----------------------- for lifetime login
 		
 		if(!empty( $cookies ) ){
 			$headers[] = 'Cookie: ' . $cookies;
@@ -221,7 +214,7 @@ Class BaseModel extends AbstractBaseModel{
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
+        curl_setopt($ch, CURLOPT_FAILONERROR, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POST, 1 );
@@ -231,13 +224,12 @@ Class BaseModel extends AbstractBaseModel{
         $http_result = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err_msg = curl_error($ch);
-        $err_num = curl_errno($ch);
+		$err_num = curl_errno($ch);
         curl_close($ch);
-        
+		
         if ($http_result === false) {
-            //TODO: Handle errors
-            $http_result = '{"error" : "1", "msg": "' . $err_num."--".$err_msg . '"}';
-        }else {
+            $content = '{"error" : "1", "messages": "' . $err_num."--".$err_msg . '"}';
+        } else {
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $http_result, $matches);
             $cookies = array();
             
@@ -245,13 +237,14 @@ Class BaseModel extends AbstractBaseModel{
                 parse_str($item, $cookie);
                 $cookies = array_merge($cookies, $cookie);
             }
+			
+			list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
+        
         }
-        
-        list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
-        
+		
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
-//		$this->res->setBody($content);
+		//$this->res->setBody($content);
         $this->setResSuccessPoPo($content); 
         $this->res->setBody($this->getResSuccessPoPo());
         $this->res->setStatus($status);
@@ -262,21 +255,18 @@ Class BaseModel extends AbstractBaseModel{
         $headers = $this->req->getHeaders();
         $url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
-        //$params  = $this->req->getParams();
-		
+        
 		$body = $this->getReqPoPoJSON();
-		
-		//$headers = $this->login(); //----------------------- for lifetime login
 		
 		if(!empty( $cookies ) ){
 			$headers[] = 'Cookie: ' . $cookies;
 		}
-
+		
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
+        curl_setopt($ch, CURLOPT_FAILONERROR, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
@@ -284,14 +274,14 @@ Class BaseModel extends AbstractBaseModel{
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 10000);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
         $http_result = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err_msg = curl_error($ch);
         $err_num = curl_errno($ch);
-        curl_close($ch);
-        
-        if ($http_result === false) {
-            $http_result = '{"error" : "1", "msg": "' . $err_num."--".$err_msg . '"}';
-        }else {
+		curl_close($ch);
+		
+		if ($http_result === false) {
+            $content = '{"error" : "1", "messages": "' . $err_num."--".$err_msg . '"}';
+        } else {
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $http_result, $matches);
             $cookies = array();
             
@@ -299,10 +289,9 @@ Class BaseModel extends AbstractBaseModel{
                 parse_str($item, $cookie);
                 $cookies = array_merge($cookies, $cookie);
             }
+			list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
         }
-        
-        list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
-        
+		
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
         //$this->res->setBody($content);
@@ -312,16 +301,14 @@ Class BaseModel extends AbstractBaseModel{
         $this->res->setStatus($status);
         
     }
+	
     private final function deleteCall(){
 		
 		$headers = $this->req->getHeaders();
         $url     = $this->req->getUrl(); 
         $cookies = $this->req->getCookies();
-        //$params  = $this->req->getParams();
-		
+       
 		$body = $this->getReqPoPoJSON();
-		
-		//$headers = $this->login(); //----------------------- for lifetime login
 		
 		if(!empty( $cookies ) ){
 			$headers[] = 'Cookie: ' . $cookies;
@@ -341,8 +328,8 @@ Class BaseModel extends AbstractBaseModel{
         curl_close($ch);
         
         if ($http_result === false) {
-            $http_result = '{"error" : "1", "msg": "' . $err_num."--".$err_msg . '"}';
-        }else {
+            $content = '{"error" : "1", "messages": "' . $err_num."--".$err_msg . '"}';
+        } else {
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $http_result, $matches);
             $cookies = array();
             
@@ -350,9 +337,8 @@ Class BaseModel extends AbstractBaseModel{
                 parse_str($item, $cookie);
                 $cookies = array_merge($cookies, $cookie);
             }
+			list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
         }
-        
-        list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
         
         $this->res->setHeaders($headers);
         $this->res->setCookies($cookies);
@@ -363,45 +349,48 @@ Class BaseModel extends AbstractBaseModel{
         $this->res->setStatus($status);
 	} 
 	
+    private final function uploadFileCall(){
+		
+		$headers = $this->req->getHeaders();
+        $url     = $this->req->getUrl(); 
+        $cookies = $this->req->getCookies();
+       
+		$body = json_decode($this->getReqPoPoJSON());
+		
+		if(!empty( $cookies )) {
+			$headers[] = 'Cookie: ' . $cookies;
+		}
+		
+		$imgdata[$body->file->colum_name] = new CurlFile($body->file->tmp_name, 'file/exgpd', $body->file->name);
+		
+		if( isset( $body->data ) ){
+			foreach($body->data as $key => $value){
+				$imgdata[$key] = $value;
+			}
+		}
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_HTTPHEADER,$headers);
+		curl_setopt($curl, CURLOPT_FAILONERROR, 0);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // stop verifying certificate
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+		curl_setopt($curl, CURLOPT_POST, true); // enable posting
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $imgdata); // post images 
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); // if any redirection after upload
+		$http_result = curl_exec($curl); 
+		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		
+        $this->res->setHeaders($headers);
+        $this->res->setCookies($cookies);
+        //$this->res->setBody($content);
+        //$this->res->setBody($this->resSuccessPoPo->fromJSON($content));
+		$this->setResSuccessPoPo($http_result); 
+        $this->res->setBody($this->getResSuccessPoPo());
+        $this->res->setStatus($status);
+	} 
 	
-	// Login for lifetime 
-	public function login(){
-		
-		$url = "http://api.raccoon.dev.canbrand.in/adminlogin";
-		$headers = array(
-			'Content-Type: application/json',
-			'APIKey: 62f7b668181f54c08191cf62a2373ff7'
-		);
-		
-		$body = '{
-			"username": "mahesh@canbrand.in",
-			"password": "12345"
-		}';
-		
-		$ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POST, 1 );
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 10000);
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
-        $http_result = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err_msg = curl_error($ch);
-        $err_num = curl_errno($ch);
-        curl_close($ch);
-		list($headers, $content) = explode("\r\n\r\n", $http_result, 2);
-		
-		$list = explode("\n", $headers);
-		
-		$token = explode(':', $list[4]);
-		
-		$data = 'APIKey: 62f7b668181f54c08191cf62a2373ff7 <br/>'.$list[4];
-		//echo "<pre>"; print_r($data); die;
-		return $data;
-	}
+	
 }
+

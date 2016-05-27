@@ -24,7 +24,25 @@ class SpeedyHttpResponse extends SpeedyHttp{
     }
 
     public final function getHeaders(){
-        return $this->headers;
+		
+		$headers_arr = array();
+		
+		if( !is_array($this->headers)){
+
+			foreach (explode("\r\n", $this->headers) as $i => $line) {
+				if ($i === 0)
+					$headers_arr['http_code'] = $line;
+				else
+				{
+					list ($key, $value) = explode(': ', $line);
+
+					$headers_arr[$key] = $value;
+				}
+			}
+			return $headers_arr;
+		}
+		
+		return $this->headers;
     }
 
     public final function getCookies(){
@@ -36,7 +54,7 @@ class SpeedyHttpResponse extends SpeedyHttp{
     }
 
     public final function getStatus(){
-    return $this->status;
+		return $this->status;
     }
 }
 ?>

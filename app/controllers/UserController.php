@@ -1,26 +1,27 @@
 <?php
 class UserController extends BaseController{
 
-	public function createHeaders($apiKey, $authToken, $version){
+	public function createHeaderss($apiKey, $authToken, $version){
 		$header = array(
 			'Content-Type: application/json',   
-			'APIKey:'.$apiKey,
-			'AuthToken:'.$authToken
+			'APIKey:62f7b668181f54c08191cf62a2373ff7',
+			'AuthToken:396dbaa0de83aeb3971c6b6cdca35a0f'
 		);
 		return $header;
 	} 
 	
 	/*userListAction function is used to get the list of the users*/
-	public function courseListAction() {
+	public function indexAction() {
 		//$this->model('UserModel');
 		
 		$user     = new UserModel();
-		$headers  = $this->createHeaders(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
+		$headers  = $this->createHeaderss(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
 		$cookies  = '';
 		$params   = '';
-		$url      = 'http://api.raccoon.dev.canbrand.in/courses?page=1&limit=10';
+		$url      = $this->api_url('courses?page=1&limit=10'); 
 		$method   = 'GET';
 		$result   = $user->getUserListing($url, $method, $headers, $cookies, $params); 
+		
 		$this->render('CourseListing', array('result'=>$result));
 	}
 	
@@ -29,7 +30,7 @@ class UserController extends BaseController{
 		//$this->model('');
 		
 		$user     = new UserModel();
-		$headers  = $this->createHeaders(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
+		$headers  = $this->createHeaderss(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
 		$cookies  = '';
 		
 		$values   = array();
@@ -55,7 +56,7 @@ class UserController extends BaseController{
 		//$this->model('UserModel');
 		
 		$user     = new UserModel();
-		$headers  = $this->createHeaders(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
+		$headers  = $this->createHeaderss(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
 		$cookies  = '';
 		
 		$values   = array();
@@ -81,7 +82,7 @@ class UserController extends BaseController{
 		//$this->model('UserModel');
 		
 		$user     = new UserModel();
-		$headers  = $this->createHeaders(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
+		$headers  = $this->createHeaderss(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
 		$cookies  = '';
 		$values   = '';
 		$url      = 'http://private-38899-racoonelearning.apiary-mock.com/disablecourse/1';
@@ -95,7 +96,7 @@ class UserController extends BaseController{
 		//$this->model('');
 		
 		$user     = new UserModel();
-		$headers  = $this->createHeaders(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
+		$headers  = $this->createHeaderss(API_KEY, AUTH_TOKEN, CONFIG_VERSION);
 		$cookies  = '';
 		
 		$values   = array();

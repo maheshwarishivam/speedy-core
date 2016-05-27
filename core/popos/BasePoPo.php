@@ -3,12 +3,12 @@ class BasePoPo {
 	
 	private $data;
 	
-	public function BasePopo($data = array()) {
+	public function setBasePopo($data = array()) { 
 		$this->data = $data;
 	}
 
 	public final function toJSON() {
-		//echo "<pre>"; print_r($reqPoPo); die;
+		//echo "<pre>ddddd"; print_r($this->data); die;
 		return json_encode($this->data);
 	}
 
